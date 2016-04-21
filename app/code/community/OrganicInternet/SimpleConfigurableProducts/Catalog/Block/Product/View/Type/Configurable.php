@@ -11,11 +11,13 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Block_Product_View_Type
 
         //Create the extra price and tier price data/html we need.
         foreach ($this->getAllowProducts() as $product) {
+
             $productId  = $product->getId();
             $childProducts[$productId] = array(
                 "price" => $this->_registerJsPrice($this->_convertPrice($product->getPrice())),
                 "finalPrice" => $this->_registerJsPrice($this->_convertPrice($product->getFinalPrice())),
                 "sku" => $product->getSku(),
+                "inStock" => $product->getTypeInstance(true)->isSalable($product)
             );
 
             if (Mage::getStoreConfig('SCP_options/product_page/change_name')) {
@@ -88,6 +90,7 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Block_Product_View_Type
 
         $p = $this->getProduct();
         $config['childProducts'] = $childProducts;
+
         if ($p->getMaxPossibleFinalPrice() != $p->getFinalPrice()) {
             $config['priceFromLabel'] = $this->__('Price From:');
         } else {
