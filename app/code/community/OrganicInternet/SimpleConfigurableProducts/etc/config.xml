@@ -6,12 +6,25 @@
         </OrganicInternet_SimpleConfigurableProducts>
     </modules>
     <global>
+        <events>
+            <bubble_elasticsearch_store_export_data>
+                <observers>
+                    <simpleconfigurableproducts_bubble_elasticsearch_store_export_data>
+                        <class>simpleconfigurableproducts/observer</class>
+                        <method>updateSimpleProducts</method>
+                    </simpleconfigurableproducts_bubble_elasticsearch_store_export_data>
+                </observers>
+            </bubble_elasticsearch_store_export_data>
+        </events>        
         <helpers>
             <simpleconfigurableproducts>
                 <class>OrganicInternet_SimpleConfigurableProducts_Helper</class>
             </simpleconfigurableproducts>
         </helpers>
         <models>
+            <simpleconfigurableproducts>
+                <class>OrganicInternet_SimpleConfigurableProducts_Model</class>
+            </simpleconfigurableproducts>
             <catalogrule_resource>
                 <rewrite>
                     <rule>OrganicInternet_SimpleConfigurableProducts_CatalogRule_Model_Resource_Rule</rule>

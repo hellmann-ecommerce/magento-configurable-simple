@@ -5,14 +5,19 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Block_Product_View_Type
 {
     public function getJsonConfig()
     {
+        
+        Mage::helper('catalog/product')->setSkipSaleableCheck(true);      
+        
         $config = Zend_Json::decode(parent::getJsonConfig());
 
         $childProducts = array();
+       
 
         //Create the extra price and tier price data/html we need.
         foreach ($this->getAllowProducts() as $product) {
 
             $productId  = $product->getId();
+            
             $childProducts[$productId] = array(
                 "price" => $this->_registerJsPrice($this->_convertPrice($product->getPrice())),
                 "finalPrice" => $this->_registerJsPrice($this->_convertPrice($product->getFinalPrice())),
@@ -71,7 +76,8 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Block_Product_View_Type
                 }
             }
         }
-
+        Mage::helper('catalog/product')->setSkipSaleableCheck(false);
+        
         //Remove any existing option prices.
         //Removing holes out of existing arrays is not nice,
         //but it keeps the extension's code separate so if Varien's getJsonConfig
