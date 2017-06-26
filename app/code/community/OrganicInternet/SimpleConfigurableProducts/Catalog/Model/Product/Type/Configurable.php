@@ -32,7 +32,7 @@
             }
 
             foreach ($collection as $item) {
-                if ($item->getStatus() == 2) 
+                if ($item->getStatus() == 2 && !Mage::app()->getStore()->isAdmin()) 
                     continue; // Hide disabled products from dropdowns;
                 $usedProducts[] = $item;
             }
