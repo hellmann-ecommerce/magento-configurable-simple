@@ -46,7 +46,8 @@ class OrganicInternet_SimpleConfigurableProducts_Model_Observer {
             }
 
             // Get corresponding configurable id
-            if (!$parentId = (string) reset($product['_parent_ids'])) {
+            if (!$product['_parent_ids'] || !$parentId = (string) reset($product['_parent_ids'])) {
+                //Mage::Log('SCP reindex: No parent_ids for '.$product['sku'].'@'.$storeid.' ('.$product['id'].')');
                 continue;
             }
 
@@ -57,7 +58,7 @@ class OrganicInternet_SimpleConfigurableProducts_Model_Observer {
                 try {
                     $image = (string) Mage::helper('catalog/image')->init($parentProductModel, 'thumbnail')->resize(2 * Mage::getStoreConfig('elasticsearch/product/image_size', $storeid));
                 } catch (Exception $e) {
-                    Mage::log("Exception in updateSimpleProducts parentId " . $parentId . ": Mage_Catalog_Helper_Image->init: [" . $e->getCode() . "]:" . $e->getMessage() . " = line " . __LINE__ . " in " . __FILE__, Zend_Log::INFO, 'exception.log');
+                    Mage::log("Exception in updateSimpleProducts parentId " . $parentId . " (storeid: ".$storeid."): Mage_Catalog_Helper_Image->init: [" . $e->getCode() . "]:" . $e->getMessage() . " = line " . __LINE__ . " in " . __FILE__, Zend_Log::INFO, 'exception.log');
                     $image = "";
                 }
                 $parentProduct = array(

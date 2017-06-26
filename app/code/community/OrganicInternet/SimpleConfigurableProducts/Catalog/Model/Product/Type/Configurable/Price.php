@@ -3,12 +3,10 @@
 #The methods in there have become a bit convoluted, so it could benefit from a tidy,
 #...though the logic is not that simple any more.
 
-class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Configurable_Price
-    extends Mage_Catalog_Model_Product_Type_Configurable_Price
-{
+class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Configurable_Price extends Mage_Catalog_Model_Product_Type_Configurable_Price {
     #We don't want to show a separate 'minimal' price for configurable products.
-    public function getMinimalPrice($product)
-    {
+
+    public function getMinimalPrice($product) {
         return $this->getPrice($product);
     }
 
@@ -35,30 +33,30 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Conf
 
     #If there aren't any salable child products we return the lowest price
     #of all child products, including any ones not currently salable.
-    public function getFinalPrice($qty=null, $product)
-    {
-/*
-        #calculatedFinalPrice seems not to be set in this version (1.4.0.1)
-        if (is_null($qty) && !is_null($product->getCalculatedFinalPrice())) {
-            #Doesn't usually get this far as Product.php checks first.
-            #Mage::log("returning calculatedFinalPrice for product: " . $product->getId());
-            return $product->getCalculatedFinalPrice();
-        }
-*/
 
-		#check if it's a 'Wishlist buy request', if so return the price of the particular option added to the wishlist
-		$buyRequest = $product->getCustomOption('info_buyRequest');
-		if ($buyRequest) {
+    public function getFinalPrice($qty = null, $product) {
+        /*
+          #calculatedFinalPrice seems not to be set in this version (1.4.0.1)
+          if (is_null($qty) && !is_null($product->getCalculatedFinalPrice())) {
+          #Doesn't usually get this far as Product.php checks first.
+          #Mage::log("returning calculatedFinalPrice for product: " . $product->getId());
+          return $product->getCalculatedFinalPrice();
+          }
+         */
+
+        #check if it's a 'Wishlist buy request', if so return the price of the particular option added to the wishlist
+        $buyRequest = $product->getCustomOption('info_buyRequest');
+        if ($buyRequest) {
             $simpleProduct = $product->getCustomOption('info_buyRequest')->getItem()->getOptionByCode('simple_product');
-            if($simpleProduct) {
-    			$options = $simpleProduct->getData();
+            if ($simpleProduct) {
+                $options = $simpleProduct->getData();
             } else {
                 $options = $product->getCustomOption('info_buyRequest')->getItem()->getData();
             }
-			$productId = $options["product_id"];
-			$childProduct = Mage::getModel('catalog/product')->load($productId);
-            return $childProduct->getPrice();
-		}
+            $productId = $options["product_id"];
+            $childProduct = Mage::getModel('catalog/product')->load($productId);
+            return $childProduct->getFinalPrice();
+        }
 
         $childProduct = $this->getChildProductWithLowestPrice($product, "finalPrice");
         if (!$childProduct) {
@@ -71,9 +69,9 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Conf
             return false;
         }
 
-        if(Mage::app()->getStore()->isAdmin()) {
-            $productAdmin = Mage::getModel('catalog/product')->loadByAttribute('sku',$product->getSku());
-            if($productAdmin->getSpecialPrice()) {
+        if (Mage::app()->getStore()->isAdmin()) {
+            $productAdmin = Mage::getModel('catalog/product')->loadByAttribute('sku', $product->getSku());
+            if ($productAdmin->getSpecialPrice()) {
                 $fp = $productAdmin->getSpecialPrice();
             } else {
                 $fp = $productAdmin->getPrice();
@@ -85,9 +83,31 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Conf
             return $fp;
         }
     }
-
-    public function getPrice($product)
+    
+    public function getFinalPrice_ori($qty=null, $product)
     {
+/*
+        #calculatedFinalPrice seems not to be set in this version (1.4.0.1)
+        if (is_null($qty) && !is_null($product->getCalculatedFinalPrice())) {
+            #Doesn't usually get this far as Product.php checks first.
+            #Mage::log("returning calculatedFinalPrice for product: " . $product->getId());
+            return $product->getCalculatedFinalPrice();
+        }
+*/
+        $childProduct = $this->getChildProductWithLowestPrice($product, "finalPrice");
+        if (!$childProduct) {
+            $childProduct = $this->getChildProductWithLowestPrice($product, "finalPrice", false);
+        }
+        if ($childProduct) {
+            $fp = $childProduct->getFinalPrice();
+        } else {
+            return false;
+        }
+        $product->setFinalPrice($fp);
+        return $fp;
+    }    
+
+    public function getPrice($product) {
         #Just return indexed_price, if it's been fetched already
         #(which it will have been for collections, but not on product page)
         $price = $product->getIndexedPrice();
@@ -109,8 +129,7 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Conf
         return false;
     }
 
-    public function getChildProducts($product, $checkSalable=true)
-    {
+    public function getChildProducts($product, $checkSalable = true) {
         static $childrenCache = array();
         $cacheKey = $product->getId() . ':' . $checkSalable;
 
@@ -123,8 +142,8 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Conf
 
         if ($checkSalable) {
             $salableChildProducts = array();
-            foreach($childProducts as $childProduct) {
-                if($childProduct->isSalable()) {
+            foreach ($childProducts as $childProduct) {
+                if ($childProduct->isSalable()) {
                     $salableChildProducts[] = $childProduct;
                 }
             }
@@ -135,38 +154,38 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Conf
         return $childProducts;
     }
 
-/*
-    public function getLowestChildPrice($product, $priceType, $checkSalable=true)
-    {
-        $childProduct = $this->getChildProductWithLowestPrice($product, $priceType, $checkSalable);
-        if ($childProduct) {
-            if ($priceType == "finalPrice") {
-                $childPrice = $childProduct->getFinalPrice();
-            } else {
-                $childPrice = $childProduct->getPrice();
-            }
-        } else {
-            $childPrice = false;
-        }
-        return $childPrice;
-    }
-*/
+    /*
+      public function getLowestChildPrice($product, $priceType, $checkSalable=true)
+      {
+      $childProduct = $this->getChildProductWithLowestPrice($product, $priceType, $checkSalable);
+      if ($childProduct) {
+      if ($priceType == "finalPrice") {
+      $childPrice = $childProduct->getFinalPrice();
+      } else {
+      $childPrice = $childProduct->getPrice();
+      }
+      } else {
+      $childPrice = false;
+      }
+      return $childPrice;
+      }
+     */
     #Could no doubt add highest/lowest as param to save 2 near-identical functions
-    public function getChildProductWithHighestPrice($product, $priceType, $checkSalable=true)
-    {
+
+    public function getChildProductWithHighestPrice($product, $priceType, $checkSalable = true) {
         $childProducts = $this->getChildProducts($product, $checkSalable);
         if (count($childProducts) == 0) { #If config product has no children
             return false;
         }
         $maxPrice = 0;
         $maxProd = false;
-        foreach($childProducts as $childProduct) {
+        foreach ($childProducts as $childProduct) {
             if ($priceType == "finalPrice") {
                 $thisPrice = $childProduct->getFinalPrice();
             } else {
                 $thisPrice = $childProduct->getPrice();
             }
-            if($thisPrice > $maxPrice) {
+            if ($thisPrice > $maxPrice) {
                 $maxPrice = $thisPrice;
                 $maxProd = $childProduct;
             }
@@ -174,21 +193,20 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Conf
         return $maxProd;
     }
 
-    public function getChildProductWithLowestPrice($product, $priceType, $checkSalable=true)
-    {
+    public function getChildProductWithLowestPrice($product, $priceType, $checkSalable = true) {
         $childProducts = $this->getChildProducts($product, $checkSalable);
         if (count($childProducts) == 0) { #If config product has no children
             return false;
         }
         $minPrice = PHP_INT_MAX;
         $minProd = false;
-        foreach($childProducts as $childProduct) {
+        foreach ($childProducts as $childProduct) {
             if ($priceType == "finalPrice") {
                 $thisPrice = $childProduct->getFinalPrice();
             } else {
                 $thisPrice = $childProduct->getPrice();
             }
-            if($thisPrice < $minPrice) {
+            if ($thisPrice < $minPrice) {
                 $minPrice = $thisPrice;
                 $minProd = $childProduct;
             }
@@ -197,8 +215,8 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product_Type_Conf
     }
 
     //Force tier pricing to be empty for configurable products:
-    public function getTierPrice($qty=null, $product)
-    {
+    public function getTierPrice($qty = null, $product) {
         return array();
     }
+
 }

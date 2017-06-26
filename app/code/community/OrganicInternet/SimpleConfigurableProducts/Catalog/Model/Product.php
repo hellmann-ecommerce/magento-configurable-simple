@@ -37,4 +37,15 @@ class OrganicInternet_SimpleConfigurableProducts_Catalog_Model_Product
             return parent::getProductUrl($useSid);
         }
     }
+
+    public function isSaleableFromData()
+    {
+        $salable = $this->getStatus() == Mage_Catalog_Model_Product_Status::STATUS_ENABLED;
+
+        if ($salable && $this->hasData('is_salable')) {
+            return (bool) $this->getData('is_salable');
+        }
+
+        return $salable && !$this->isComposite();
+    }
 }

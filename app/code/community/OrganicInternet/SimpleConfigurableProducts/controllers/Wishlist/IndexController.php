@@ -80,30 +80,30 @@ class OrganicInternet_SimpleConfigurableProducts_Wishlist_IndexController extend
 
         try {
             $options = Mage::getModel('wishlist/item_option')->getCollection()
-                    ->addItemFilter(array($itemId));
+                ->addItemFilter(array($itemId));
             $item->setOptions($options->getOptionsByItem($itemId));
-            
+
             $itemBuyRequest = $item->getBuyRequest();
             $childProduct = null;
             if($itemBuyRequest['super_attribute']) {
-               $childProduct = $item->getProduct()->getTypeInstance(true)->getProductByAttributes($itemBuyRequest['super_attribute'], $item->getProduct());
-               $childProduct = Mage::getModel('catalog/product')->load($childProduct->getId());
+                $childProduct = $item->getProduct()->getTypeInstance(true)->getProductByAttributes($itemBuyRequest['super_attribute'], $item->getProduct());
+                $childProduct = Mage::getModel('catalog/product')->load($childProduct->getId());
 
-               $itemBuyRequest->setData('product', $childProduct->getId());
-            }            
+                $itemBuyRequest->setData('product', $childProduct->getId());
+            }
 
             $buyRequest = Mage::helper('catalog/product')->addParamsToBuyRequest(
                 $this->getRequest()->getParams(),
                 array('current_config' => $itemBuyRequest)
             );
-            
+
             // Overwrite stored product with loaded simple configurable because it holds stock info
             if($childProduct) {
-                $buyRequest->setData('product', $childProduct->getId()); 
-                $item->setProduct($childProduct);                
+                $buyRequest->setData('product', $childProduct->getId());
+                $item->setProduct($childProduct);
             }
             $item->mergeBuyRequest($buyRequest);
-           
+
             if ($item->addToCart($cart, true)) {
                 $cart->save()->getQuote()->collectTotals();
             }
@@ -141,8 +141,8 @@ class OrganicInternet_SimpleConfigurableProducts_Wishlist_IndexController extend
 
         return $this->_redirectUrl($redirectUrl);
     }
-    
-    
+
+
     /**
      * Add all items from wishlist to shopping cart
      *
@@ -168,50 +168,43 @@ class OrganicInternet_SimpleConfigurableProducts_Wishlist_IndexController extend
 
         $cart       = Mage::getSingleton('checkout/cart');
         $collection = $wishlist->getItemCollection()
-                ->setVisibilityFilter();
+            ->setVisibilityFilter();
 
         $qtysString = $this->getRequest()->getParam('qty');
         if (isset($qtysString)) {
             $qtys = array_filter(json_decode($qtysString), 'strlen');
         }
-
         foreach ($collection as $item) {
             /** @var Mage_Wishlist_Model_Item */
             try {
-                
-                $disableAddToCart = $item->getProduct()->getDisableAddToCart();
-                $item->unsProduct();                
-                
-                // Start: Get childProduct and overwrite stored product with loaded simple configurable because it holds stock info
-                $itemBuyRequest = $item->getBuyRequest();
-                $childProduct = null;        
-                if($itemBuyRequest['super_attribute']) {
-                    
-                   $childProduct = $item->getProduct()->getTypeInstance(true)->getProductByAttributes($itemBuyRequest['super_attribute'], $item->getProduct());
-                   $childProduct = Mage::getModel('catalog/product')->load($childProduct->getId());
 
-                    if($childProduct) {
-                        //$buyRequest->setData('product', $childProduct->getId()); 
-                        $item->setProduct($childProduct);     
-                        $itemBuyRequest->setData('product', $childProduct->getId());                       
-                        $item->mergeBuyRequest($itemBuyRequest);                          
-                    }                   
-                }            
-                // End
-                
-                // Set qty
+                $disableAddToCart = $item->getProduct()->getDisableAddToCart();
+                $item->unsProduct();
+                /** @var Mage_Catalog_Model_Product $product */
+                $product = Mage::getModel('catalog/product');
+                /** @var Mage_Eav_Model_Attribute $defaultAttributeModel */
+                $defaultAttributeModel = $product->getResource()->getAttribute("schleich");
+                // get default configurable attribute data
+                $staticAttributeId = $defaultAttributeModel->getId();
+                $staticOptionValue = $defaultAttributeModel->getSource()->getOptionId("default");
+                // Start: Get childProduct and overwrite stored product with loaded simple configurable because it holds stock info
+                $item->getBuyRequest()->setData('super_attribute', array($staticAttributeId => $staticOptionValue));
+
+                $item->getProduct()->setDisableAddToCart($disableAddToCart);
                 if (isset($qtys[$item->getId()])) {
                     $qty = $this->_processLocalizedQty($qtys[$item->getId()]);
                     if ($qty) {
                         $item->setQty($qty);
                     }
                 }
-                $item->getProduct()->setDisableAddToCart($disableAddToCart);
-                // Add to cart
-                if ($item->addToCart($cart, $isOwner)) {
-                    $addedItems[] = $item->getProduct();
+                try {
+                    if ($item->addToCart($cart, $isOwner)) {
+                        $addedItems[] = $item->getProduct();
+                    }
+                } catch (Exception $e) {
+                    echo $e->getMessage();
+                    exit;
                 }
-
             } catch (Mage_Core_Exception $e) {
                 if ($e->getCode() == Mage_Wishlist_Model_Item::EXCEPTION_CODE_NOT_SALABLE) {
                     $notSalable[] = $item;
@@ -230,7 +223,6 @@ class OrganicInternet_SimpleConfigurableProducts_Wishlist_IndexController extend
                 $messages[] = Mage::helper('wishlist')->__('Cannot add the item to shopping cart.');
             }
         }
-
         if ($isOwner) {
             $indexUrl = Mage::helper('wishlist')->getListUrl($wishlist->getId());
         } else {
@@ -251,7 +243,6 @@ class OrganicInternet_SimpleConfigurableProducts_Wishlist_IndexController extend
             }
             $messages[] = Mage::helper('wishlist')->__('Unable to add the following product(s) to shopping cart: %s.', join(', ', $products));
         }
-
         if ($hasOptions) {
             $products = array();
             foreach ($hasOptions as $item) {
@@ -303,7 +294,5 @@ class OrganicInternet_SimpleConfigurableProducts_Wishlist_IndexController extend
         Mage::helper('wishlist')->calculate();
 
         $this->_redirectUrl($redirectUrl);
-    }    
-    
-    
+    }
 }

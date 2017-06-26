@@ -20,11 +20,19 @@
             <simpleconfigurableproducts>
                 <class>OrganicInternet_SimpleConfigurableProducts_Helper</class>
             </simpleconfigurableproducts>
+            <turpentine>
+                <rewrite>
+                    <data>OrganicInternet_SimpleConfigurableProducts_Helper_Turpentine_Data</data>
+                </rewrite>
+            </turpentine>
         </helpers>
         <models>
             <simpleconfigurableproducts>
                 <class>OrganicInternet_SimpleConfigurableProducts_Model</class>
             </simpleconfigurableproducts>
+            <organicinternet_simpleconfigurableproducts>
+                <class>OrganicInternet_SimpleConfigurableProducts_Model</class>
+            </organicinternet_simpleconfigurableproducts>
             <catalogrule_resource>
                 <rewrite>
                     <rule>OrganicInternet_SimpleConfigurableProducts_CatalogRule_Model_Resource_Rule</rule>
@@ -131,13 +139,13 @@
                     </modules>
                 </args>
             </checkout>
-            <wishlist>
-                <args>
-                    <modules>
-                        <OrganicInternet_SimpleConfigurableProducts before="Mage_Wishlist">OrganicInternet_SimpleConfigurableProducts_Wishlist</OrganicInternet_SimpleConfigurableProducts>
-                    </modules>
-                </args>
-            </wishlist>            
+            <!--<wishlist>-->
+                <!--<args>-->
+                    <!--<modules>-->
+                        <!--<OrganicInternet_SimpleConfigurableProducts before="Mage_Wishlist">OrganicInternet_SimpleConfigurableProducts_Wishlist</OrganicInternet_SimpleConfigurableProducts>-->
+                    <!--</modules>-->
+                <!--</args>-->
+            <!--</wishlist>            -->
             <oi>
                 <use>standard</use>
                 <args>
